@@ -1,0 +1,42 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for config-coreconfig
+
+  - name: Install python3-lxml
+    ansible.builtin.apt:
+      name: python3-lxml
+      state: present
+
+  # read current db password before copying jinja template
+  - name: Read password attribute from XML
+    ansible.builtin.xml:
+      path: /opt/tak/CoreConfig.xml.backup
+      xpath: /a:Configuration/a:repository/a:connection
+      content: attribute
+      namespaces:
+        a: "http://bbn.com/marti/xml/config"
+    register: db_password_path
+
+  - name: Set db password fact
+    set_fact: 
+      db_password_value: "{{ db_password_path.matches[0]['{http://bbn.com/marti/xml/config}connection']['password'] }}"
+
+
+  - name: Copy CoreConfig jinja template
+    template: 
+      src: CoreConfig.xml.j2
+      dest: /opt/tak/CoreConfig.xml
+    register: coreconfig_copied
+    
+  # Block only runs if core config was changed    
+  - name: Block to reload, restart
+    when: coreconfig_copied.changed
+    block:
+    
+      - name: Reload systemd
+        command: systemctl daemon-reload
+
+      - name: Restart takserver
+        systemd:
+          name: takserver
+          state: restarted

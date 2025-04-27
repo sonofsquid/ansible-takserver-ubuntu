@@ -1,0 +1,80 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for create-certs
+
+  - name: Set CA root name in script
+    ansible.builtin.lineinfile:
+      path: '{{ makeRoot_script_path }}'
+      regexp: '^CA_NAME='
+      line: 'CA_NAME="{{ ca_cert_name | default("root-{{ ansible_hostname }}") }}"'
+      insertbefore: BOF
+
+  - name: Create the root CA cert
+    ansible.builtin.shell: ./makeRootCa.sh
+    args:
+      chdir: '{{ certs_script_path }}'
+      creates: /opt/tak/certs/files/truststore-root.jks
+
+  - name: Create the server cert
+    ansible.builtin.shell: ./makeCert.sh server {{ server_cert_name | default('takserver') }}
+    args:
+      chdir: '{{ certs_script_path }}'
+      creates: /opt/tak/certs/files/{{ server_cert_name | default('takserver') }}.jks
+
+  - name: Create the user certs
+    loop: '{{ user_cert_name | default("user01") }}'
+    ansible.builtin.shell: ./makeCert.sh client {{ item }}
+    args:
+      chdir: '{{ certs_script_path }}'
+      creates: /opt/tak/certs/files/{{ item }}.jks
+
+  - name: Create the admin cert
+    loop: '{{ admin_cert_name | default("admin") }}'
+    ansible.builtin.shell: ./makeCert.sh client {{ item }}
+    args:
+      chdir: '{{ certs_script_path }}'
+      creates: /opt/tak/certs/files/{{ item }}.jks
+    register: admin_cert_created
+
+  # Block only runs if admin cert was created
+  - name: Block to reload, restart, and apply admin privlages
+    when: admin_cert_created.changed
+    block:
+    
+    - name: Reload systemd
+      command: systemctl daemon-reload
+
+    - name: Restart takserver
+      systemd:
+        name: takserver
+        state: restarted
+
+    # - name: Wait for 50 seconds before continuing
+    #   ansible.builtin.pause:
+    #     seconds: 50
+
+    # ignore_errors as this can be done at the end or manually.
+    # sudo java -jar /opt/tak/utils/UserManager.jar certmod -A /opt/tak/certs/files/admin.pem
+
+    # - name: Grant admin privileges via UserManager.jar
+    #   loop: "{{ admin_cert_name }}"
+    #   ansible.builtin.command:
+    #     cmd: >
+    #       java -jar /opt/tak/utils/UserManager.jar
+    #       certmod -A /opt/tak/certs/files/{{ item }}.pem
+    #   register: certmod_out
+    #   retries: 5
+    #   delay: 15
+    #   until: certmod_out.rc == 0
+
+    # - name: Run certmod to give admin privlages to admin accounts
+    #   with_items: '{{ admin_cert_name | default("admin") }}'
+    #   ansible.builtin.command:
+    #     argv:
+    #       - java
+    #       - -jar
+    #       - /opt/tak/utils/UserManager.jar
+    #       - certmod
+    #       - -A
+    #       - /opt/tak/certs/files/{{ item }}.pem
+    #   ignore_errors: true

@@ -1,0 +1,9 @@
+---
+# Playbook that calls role: 
+
+- name: Setup Takserver on Ubunutu
+  hosts: all
+  become: true
+
+  roles:
+    - takserver-ubuntu

@@ -1,0 +1,40 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for cert-metadata
+
+    - name: Set COUNTRY
+      ansible.builtin.lineinfile:
+        path: '{{ script_path }}'
+        regexp: '^COUNTRY='
+        line: 'COUNTRY={{ country_name | default("US") }}'
+        insertbefore: BOF
+
+    - name: Set STATE
+      ansible.builtin.lineinfile:
+        path: '{{ script_path }}'
+        regexp: '^STATE='
+        line: 'STATE={{ state_name | default("VA") }}'
+        insertbefore: BOF
+
+    - name: Set CITY
+      ansible.builtin.lineinfile:
+        path: '{{ script_path }}'
+        regexp: '^CITY='
+        line: 'CITY={{ city_name | default("XX") }}'
+        insertbefore: BOF
+
+    - name: Set ORGANIZATION
+      ansible.builtin.lineinfile:
+        path: '{{ script_path }}'
+        regexp: '^ORGANIZATION='
+        line: 'ORGANIZATION={{ org_name | default("XX") }}'
+        insertbefore: BOF
+
+    - name: Set ORGANIZATIONAL_UNIT
+      ansible.builtin.lineinfile:
+        path: '{{ script_path }}'
+        regexp: '^ORGANIZATIONAL_UNIT='
+        line: 'ORGANIZATIONAL_UNIT={{ org_unit_name | default("XX") }}'
+        insertbefore: BOF
+      
+ 

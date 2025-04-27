@@ -1,0 +1,20 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for takserver-ubuntu
+
+# cert-metadata vars
+script_path: /opt/tak/certs/cert-metadata.sh
+country_name: US
+state_name: VA
+city_name: XX
+org_name: XX
+org_unit_name: XX
+
+# cert vars
+certs_script_path: /opt/tak/certs/
+makeRoot_script_path: /opt/tak/certs/makeRootCa.sh
+
+ca_cert_name: 'root-{{ ansible_hostname }}'
+server_cert_name: takserver
+user_cert_name: ['user01', 'user02', 'user03']
+admin_cert_name: ['admin']

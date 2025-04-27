@@ -1,0 +1,55 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for config-ufw
+
+    - name: Install ufw package
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: true
+
+    - name: Set default deny incoming
+      community.general.ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set default allow outgoing
+      community.general.ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Allow SSH
+      community.general.ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow port 8089
+      community.general.ufw:
+        rule: allow
+        port: 8089
+
+    - name: Allow port 8443
+      community.general.ufw:
+        rule: allow
+        port: 8443
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    - name: Restart takserver
+      systemd:
+        name: takserver
+        state: restarted
+
+    - name: Grant admin privileges via UserManager.jar
+      when: admin_cert_created.changed
+      loop: "{{ admin_cert_name }}"
+      ansible.builtin.command:
+        cmd: >
+          java -jar /opt/tak/utils/UserManager.jar
+          certmod -A /opt/tak/certs/files/{{ item }}.pem
+      register: certmod_out
+      retries: 5
+      delay: 15
+      until: certmod_out.rc == 0

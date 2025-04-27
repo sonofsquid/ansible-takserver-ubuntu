@@ -1,8 +1,3 @@
-# ansible-takserver-ubuntu
-Ansible role that sets up a takserver on an ubuntu machine.  
-
-Familiarity with Ansible and takserver install recommended.  
-
 takserver-ubuntu
 =========
 
@@ -103,8 +98,7 @@ Call the Role and all tasks
 Call a specific task from the role. Ex prereqs only  
 
 ```yaml
-- name: Run only the prereq portion of takserver-ubuntu role
-
+- name: Run only the cert-creation portion of takserver3
   hosts: all
   become: true
 

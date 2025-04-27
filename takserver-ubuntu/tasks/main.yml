@@ -1,0 +1,22 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for takserver-ubuntu
+
+# Run command below to target specific task
+# ansible-playbook playbook.yml --tags prereq -i inventory
+
+
+- import_tasks: prereq.yml
+  tags: prereq
+
+- import_tasks: cert-metadata.yml
+  tags: cert-metadata
+
+- import_tasks: create-certs.yml
+  tags: create-certs
+
+- import_tasks: config-coreconfig.yml
+  tags: config-coreconfig
+
+- import_tasks: config-ufw.yml
+  tags: config-ufw

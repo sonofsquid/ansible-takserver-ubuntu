@@ -1,0 +1,64 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for prereq
+
+    - name: Set nofile limits
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "* {{ item.type }} nofile 32768"
+        state: present
+      loop:
+        - { type: "soft" }
+        - { type: "hard" }
+
+    - name: Install lsb-release
+      ansible.builtin.apt:
+        name: lsb-release
+        state: present
+
+    - name: Make keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+
+    - name: Download PostgreSQL GPG key
+      get_url:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        dest: /etc/apt/keyrings/postgresql.asc
+
+    - name: Add PostgreSQL APT repository
+      copy:
+        dest: /etc/apt/sources.list.d/postgresql.list
+        content: |
+          deb [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt/ {{ ansible_facts['lsb']['codename'] }}-pgdg main
+
+    - name: Copy TAK Server .deb package to target
+      copy:
+        src: files/takserver_5.3-RELEASE24_all.deb
+        dest: /home/{{ ansible_user }}/Downloads/takserver_5.3-RELEASE24_all.deb
+      register: tak_copy_result
+
+    # Only run if takserver package is copied over
+    - name: Apt Update
+      ansible.builtin.apt:
+        update_cache: yes
+        # upgrade: yes
+      when: tak_copy_result.changed
+
+    - name: Install TAK Server package via apt
+      ansible.builtin.apt:
+        deb: '/home/{{ ansible_user }}/Downloads/takserver_5.3-RELEASE24_all.deb'
+      register: tak_install_result
+
+    # Only run if takserver package is installed
+    - name: Reload systemd
+      command: systemctl daemon-reload
+      when: tak_install_result.changed
+
+    - name: Enable and start takserver
+      systemd:
+        name: takserver
+        enabled: true
+        state: started
+
+    
