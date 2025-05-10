@@ -2,6 +2,9 @@
 ---
 # vars file for takserver-ubuntu
 
+# prereq vars
+takserver_release_file: takserver_5.3-RELEASE24_all.deb
+
 # cert-metadata vars
 script_path: /opt/tak/certs/cert-metadata.sh
 country_name: US

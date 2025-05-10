@@ -32,10 +32,27 @@
         content: |
           deb [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt/ {{ ansible_facts['lsb']['codename'] }}-pgdg main
 
+    - name: Ensure local Downloads directory exists on the remote host
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/Downloads
+        state: directory
+
+    - name: Check that the takserver .deb exists on the control node
+      ansible.builtin.stat:
+        path: files/{{ takserver_release_file }}
+      delegate_to: localhost
+      register: takserver_deb_stat
+
+    - name: Fail if the takserver .deb is missing in files/
+      ansible.builtin.assert:
+        that:
+          - takserver_deb_stat.stat.exists
+        fail_msg: "TAK Server release file {{ takserver_release_file }} not found under files/ – please put it there."
+
     - name: Copy TAK Server .deb package to target
       copy:
-        src: files/takserver_5.3-RELEASE24_all.deb
-        dest: /home/{{ ansible_user }}/Downloads/takserver_5.3-RELEASE24_all.deb
+        src: files/{{ takserver_release_file }}
+        dest: /home/{{ ansible_user }}/Downloads/{{ takserver_release_file }}
       register: tak_copy_result
 
     # Only run if takserver package is copied over
@@ -47,7 +64,7 @@
 
     - name: Install TAK Server package via apt
       ansible.builtin.apt:
-        deb: '/home/{{ ansible_user }}/Downloads/takserver_5.3-RELEASE24_all.deb'
+        deb: '/home/{{ ansible_user }}/Downloads/{{ takserver_release_file }}'
       register: tak_install_result
 
     # Only run if takserver package is installed
