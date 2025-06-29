@@ -21,3 +21,8 @@ ca_cert_name: 'root-{{ ansible_hostname }}'
 server_cert_name: takserver
 user_cert_name: ['user01', 'user02', 'user03']
 admin_cert_name: ['admin']
+
+# copy-certs vars
+remote_dir: /opt/tak/certs/files      # directory on the managed host
+local_dest: /home/ansible/certs/         # local dir files will be copied to
+file_mode: '0666'                     # desired permission mode on remote host

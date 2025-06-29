@@ -4,7 +4,7 @@
 
 # Run command below to target specific task
 # ansible-playbook playbook.yml --tags prereq -i inventory
-
+ 
 
 - import_tasks: prereq.yml
   tags: prereq
@@ -20,3 +20,6 @@
 
 - import_tasks: config-ufw.yml
   tags: config-ufw
+
+- import_tasks: copy-certs.yml
+  tags: copy-certs
