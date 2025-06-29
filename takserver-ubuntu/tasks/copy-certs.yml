@@ -1,0 +1,33 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for copy-certs
+
+    # - name: Ensure local_dest exists on control node
+    #   file:
+    #     path: "{{ local_dest }}"
+    #     state: directory
+    #   delegate_to: localhost
+    #   run_once: true
+
+    - name: Find all regular files in remote_dir
+      ansible.builtin.find:
+        paths: "{{ remote_dir }}"
+        file_type: file
+      register: found_files
+
+    - name: Change mode on each file
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        mode: "{{ file_mode }}"
+      loop: "{{ found_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Fetch files back to control node
+      ansible.builtin.fetch:
+        src:  "{{ item.path }}"
+        dest: "{{ local_dest }}"
+        flat: yes
+      loop: "{{ found_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
